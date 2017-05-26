@@ -1,4 +1,6 @@
-import xlrd
+from xlutils.copy import copy
+from xlwt import easyxf
+from xlrd import open_workbook
 
 def mat1(filename):
         f = open(filename, 'r')
@@ -10,16 +12,42 @@ def mat1(filename):
                         mat[i][j] = int(mat[i][j])
         return mat
 
+def get_matrix_info(filename):
+        rb = open_workbook(filename)
+        sheet = rb.sheet_by_index(0)
+        products = []
+        machines = []
+        for i in range(27):
+                machines.append(sheet.cell_value(i + 2, 0))
+        for j in range(28):
+                products.append(sheet.cell_value(0, j + 2))
+        return [machines, products]
+        
 def mat1_xls(filename):
-	rb = xlrd.open_workbook(filename)
-	sheet = rb.sheet_by_index(0)
-	mat = []
-	for i in range(27):
-    		mat.append([0]*28)
-	for i in range(27):
-    		for j in range(28):
-        		mat[i][j] = sheet.cell_value(i+2, j+2)
-	return mat
+        rb = open_workbook(filename)
+        sheet = rb.sheet_by_index(0)
+        mat = []
+        for i in range(27):
+            mat.append([0]*28)
+        for i in range(27):
+            for j in range(28):
+                        mat[i][j] = sheet.cell_value(i+2, j+2)
+        return mat
+
+def mat4_xls(filename, mat4, index_mach, index_prod):
+        rb = open_workbook(filename, encoding_override="cp1252", formatting_info=True)
+        wb = copy(rb)
+        sheet = wb.get_sheet(0)
+        style = easyxf('font: name calibri, color black; align: wrap on, vert centre, horiz center; borders: left thin, right thin, top thin, bottom thin;')
+        machines, products = get_matrix_info(filename)
+        for j in range(len(mat4[0])): #Writing the product's names on the workbook
+                sheet.write(0, j + 2, products[index_prod[j]])
+        for i in range(len(mat4)): #Writing the machine's names on the workbook
+                sheet.write(i + 2, 0, machines[index_mach[i]])
+        for i in range(len(mat4)):
+                for j in range(len(mat4[i])):
+                        sheet.write(i + 2, j + 2, mat4[i][j], style)
+        wb.save(filename)
 
 def mat2(filename):
         mat = mat1_xls(filename)
@@ -35,7 +63,7 @@ def mat2(filename):
                                                 tasks_per_machine[m] += 1
                                                 mat2[i][m] += 1
                                                 mat2[m][i] += 1
-        return [mat2,tasks_per_machine]
+        return [mat2, tasks_per_machine]
 
 def mat3(matriz1,matriz2,tasks_per_machine):
 		ordemlinhas = []
@@ -69,7 +97,7 @@ def mat3(matriz1,matriz2,tasks_per_machine):
 		for i in ordemlinhas:
 			novaMat.append(matriz1[i])
 
-		return [novaMat,ordemlinhas]
+		return [novaMat, ordemlinhas]
 
 def contagem(seq, coluna):
         cont = 0
@@ -123,17 +151,17 @@ def mat4(matriz3):
                         linha.append(i[j])
                 novaMat.append(linha)
 
-        return [novaMat,ordemColunas]
+        return [novaMat, ordemColunas]
 
 
 if __name__ == "__main__":
         filename = "matriz1.txt"
-	filename_xls = "Matriz.xls"
+        filename_xls = "Matriz.xls"
         matriz1 = mat1_xls(filename_xls)
         print 'Matriz A'
         for i in matriz1:
         	print i
-        matriz2,tasks_per_machine = mat2(filename_xls)
+        matriz2, tasks_per_machine = mat2(filename_xls)
         print
         for i in xrange(len(tasks_per_machine)):
         	matriz2[i].append('|')
@@ -142,9 +170,18 @@ if __name__ == "__main__":
         for i in matriz2:
         	print i
         print
-        nova,ordemlinhas = mat3(matriz1,matriz2,tasks_per_machine)
-        print ordemlinhas
+        nova, rows = mat3(matriz1,matriz2,tasks_per_machine)
+        print "Ordem das linhas\n"
+        print rows
         print
         print 'Matriz A com as linhas atualizadas'
         for i in nova:
         	print i
+        print
+        mat4, cols = mat4(nova)
+        print "Ordem das colunas\n"
+        print cols
+        print
+        for i in mat4:
+                print i
+        mat4_xls("Matriz Final.xls", mat4, rows, cols)
