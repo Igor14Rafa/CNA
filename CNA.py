@@ -71,6 +71,61 @@ def mat3(matriz1,matriz2,tasks_per_machine):
 
 		return [novaMat,ordemlinhas]
 
+def contagem(seq, coluna):
+        cont = 0
+        for linha in seq:
+                if linha[coluna] == 1:
+                        cont += 1
+        return cont
+
+def mat4(matriz3):
+        mat = matriz3[:]
+        ordemColunas = []
+        colunas = len(mat[0])
+        
+        while True:
+
+                #Se a matriz ainda esta divisivel
+                if len(mat) > 1:
+                        div = len(mat)/2
+                        seq1 = mat[:div]
+                        seq2 = mat [div:]
+
+                        #Adiciona a coluna na nova ordem se o numero de 1s
+                        #na coluna for maior em SEQ1 que em SEQ2
+                        for j in xrange(colunas):
+                                if j not in ordemColunas:
+                                        n1 = contagem(seq1,j)
+                                        n2 = contagem(seq2,j)
+                                        if n1 > n2:
+                                                ordemColunas.append(j)
+
+                        #Se todas as linhas ja foram marcadas o processo para,
+                        #caso contrario a nova matriz sera SEQ2
+                        if len(ordemColunas) == colunas:
+                                break
+                        else:
+                                mat = seq2
+                                
+                #Caso nao seja mais possivel dividir a matriz
+                #adicionam-se as linhas restantes diretamente
+                else:
+                        for j in xrange(colunas):
+                                if j not in ordemColunas:
+                                        ordemColunas.append(j)
+                        break
+
+        #Construcao da nova matriz, com linhas e colunas rearranjadas
+        novaMat = []
+        for i in matriz3:
+                linha = []
+                for j in ordemColunas:
+                        linha.append(i[j])
+                novaMat.append(linha)
+
+        return [novaMat,ordemColunas]
+
+
 if __name__ == "__main__":
         filename = "matriz1.txt"
 	filename_xls = "Matriz.xls"
